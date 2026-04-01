@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+	{% load static %}
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>{% block title %}Flashcards{% endblock %}</title>
+	<style>
+		:root{
+			--p-bg1:#f7fafc; /* soft gray */
+			--p-bg2:#eef2ff; /* periwinkle */
+			--p-bg3:#f5f3ff; /* lavender */
+			--p-ac1:#a78bfa; /* purple */
+			--p-ac2:#60a5fa; /* blue */
+			--p-ac3:#34d399; /* green */
+			--p-card:#ffffff;
+			--p-text:#111827;
+			--p-muted:#6b7280;
+		}
+		/* Soft animated pastel background (no image) */
+		body{font-family:Segoe UI,Arial,sans-serif;background:
+			radial-gradient(60% 80% at 20% 10%, rgba(167,139,250,.28), rgba(167,139,250,0) 60%),
+			radial-gradient(70% 70% at 80% 20%, rgba(96,165,250,.25), rgba(96,165,250,0) 60%),
+			radial-gradient(60% 80% at 30% 90%, rgba(52,211,153,.22), rgba(52,211,153,0) 60%),
+			linear-gradient(120deg, var(--p-bg1), var(--p-bg2), var(--p-bg3));
+			background-size: 120% 120%, 130% 130%, 120% 120%, 200% 200%;
+			animation: gradientShift 16s ease infinite; margin:0; min-height:100vh; color:var(--p-text)}
+		.container{max-width:960px;margin:0 auto;padding:28px}
+		h1{margin:0 0 16px;letter-spacing:.3px;display:inline-block;position:relative}
+		h1::after{content:"";position:absolute;left:0;bottom:-4px;width:100%;height:6px;background:linear-gradient(90deg,var(--p-ac1),var(--p-ac2),var(--p-ac3));border-radius:6px;opacity:.25}
+		a.btn,button.btn{display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:11px 18px;border-radius:14px;text-decoration:none;border:none;cursor:pointer;transition:transform .15s ease, box-shadow .2s ease, filter .2s ease;position:relative;overflow:hidden}
+		a.btn:hover,button.btn:hover{transform:translateY(-2px);box-shadow:0 14px 26px rgba(79,70,229,.28);filter:saturate(1.08)}
+		a.btn:active,button.btn:active{transform:translateY(0)}
+		a.btn.secondary{background:linear-gradient(135deg,#10b981,#22c55e)}
+		.card{background:rgba(255,255,255,.98);backdrop-filter:saturate(1.2) blur(2px);border-radius:18px;padding:22px;box-shadow:0 10px 28px rgba(0,0,0,.08);margin-bottom:18px;transform:translateY(0);transition:transform .18s ease, box-shadow .2s ease;opacity:0}
+		.card:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(0,0,0,.10)}
+		.card.appear{animation:fadeIn .4s ease forwards}
+		input[type=text], select, input[type=file]{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:12px;transition:box-shadow .2s ease,border-color .2s ease,transform .08s ease}
+		input[type=text]:focus, select:focus, input[type=file]:focus{outline:none;border-color:#a78bfa;box-shadow:0 0 0 4px rgba(167,139,250,.18);transform:translateY(-1px)}
+		label{font-weight:600;margin:10px 0 6px;display:block}
+		.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+		input[type=radio]{accent-color:#6366f1}
+
+		/* Dark theme variants */
+		body.theme-dark{--p-bg1:#0b1020;--p-bg2:#0f172a;--p-bg3:#111827;--p-text:#e5e7eb}
+		body.theme-dark .card{background:rgba(17,24,39,.78);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+		body.theme-dark a.btn, body.theme-dark button.btn{background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+		body.theme-dark h1 a{color:#e5e7eb !important}
+
+		/* Floating pastel shapes */
+		.shapes{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;display:block}
+		/* Glowy animated blob */
+		.bg-blob{position:fixed;right:-120px;bottom:-120px;width:360px;height:360px;border-radius:50%;
+			background:radial-gradient(circle at 30% 30%, rgba(99,102,241,.35), rgba(99,102,241,0) 60%),
+							  radial-gradient(circle at 70% 70%, rgba(16,185,129,.30), rgba(16,185,129,0) 60%);
+			filter:blur(10px);opacity:.5;animation:blobMove 18s ease-in-out infinite alternate;z-index:0}
+		@keyframes blobMove{from{transform:translate(0,0) scale(1)}to{transform:translate(-40px,-30px) scale(1.06)}}
+		.shape{position:absolute;border-radius:50%;filter:blur(2px);opacity:.15;animation:drift 22s ease-in-out infinite}
+		.shape.s1{width:140px;height:140px;background:var(--p-ac1);left:6%;top:12%;animation-duration:26s}
+		.shape.s2{width:220px;height:220px;background:var(--p-ac2);left:78%;top:18%;animation-duration:30s}
+		.shape.s3{width:180px;height:180px;background:var(--p-ac3);left:20%;top:70%;animation-duration:24s}
+		@keyframes drift{0%{transform:translate(0,0)}50%{transform:translate(20px,-16px)}100%{transform:translate(0,0)}}
+
+		/* Page transition overlay (soft crossfade + blur) */
+		.page-transition{position:fixed;inset:0;background:radial-gradient(1200px 800px at 50% 30%, rgba(255,255,255,.65), rgba(255,255,255,.35) 60%, rgba(255,255,255,0));opacity:0;pointer-events:none;transition:opacity .48s cubic-bezier(.22,.61,.36,1);backdrop-filter:blur(0px);z-index:30}
+		body.page-leave .page-transition{opacity:.85;backdrop-filter:blur(6px)}
+		/* Fade and gently scale the content */
+		body.page-leave .container{transition:transform .48s cubic-bezier(.22,.61,.36,1), opacity .48s cubic-bezier(.22,.61,.36,1);transform:scale(.985);opacity:.35}
+		body.page-enter .container{animation:pageIn .5s cubic-bezier(.22,.61,.36,1)}
+		@keyframes pageIn{from{opacity:0;transform:translateY(8px) scale(.992)}to{opacity:1;transform:translateY(0) scale(1)}}
+		@keyframes fadeIn{from{opacity:.0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+		@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+		/* Fun effects */
+		@keyframes fall{to{transform:translateY(120vh) rotate(720deg);opacity:.9}}
+		@keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+		.shake{animation:shake .5s ease both}
+		.confetti-piece{position:fixed;top:-10px;left:0;width:10px;height:14px;opacity:.95;border-radius:2px;pointer-events:none;will-change:transform}
+	</style>
+</head>
+<body>
+	<div class="shapes" aria-hidden="true">
+		<div class="shape s1"></div>
+		<div class="shape s2"></div>
+		<div class="shape s3"></div>
+		<div class="bg-blob"></div>
+	</div>
+	<div class="page-transition"></div>
+	<div class="container">
+		<h1><a href="/" style="text-decoration:none;color:#111827">Flashcards</a></h1>
+		<div style="float:right; margin-top:-6px">
+			<button class="btn" id="themeToggle" type="button" aria-label="Toggle theme">Theme</button>
+		</div>
+		{% block content %}{% endblock %}
+	</div>
+	<script>
+		(function(){
+			const cards = document.querySelectorAll('.card');
+			cards.forEach((c,i)=>{ setTimeout(()=> c.classList.add('appear'), 60*i); });
+		})();
+
+		// Simple confetti generator (no external libs)
+		function fireConfetti(count=80,duration=900){
+			const colors=['#f59e0b','#ef4444','#10b981','#3b82f6','#a78bfa'];
+			for(let i=0;i<count;i++){
+				const el=document.createElement('div');
+				el.className='confetti-piece';
+				const size=6+Math.random()*8;
+				el.style.width=size+'px';
+				el.style.height=size*1.3+'px';
+				el.style.background=colors[i%colors.length];
+				el.style.left=(Math.random()*100)+'vw';
+				el.style.transform=`translateY(-20px) rotate(${Math.random()*360}deg)`;
+				el.style.animation=`fall ${0.9+Math.random()*0.9}s cubic-bezier(.2,.7,.2,1) forwards`;
+				document.body.appendChild(el);
+				setTimeout(()=> el.remove(), duration+600);
+			}
+		}
+		window.flashFx = { fireConfetti };
+
+		// Ripple effect for buttons/links
+		function addRipple(e){
+			const target = e.currentTarget;
+			const rect = target.getBoundingClientRect();
+			const ripple = document.createElement('span');
+			ripple.style.position='absolute';
+			ripple.style.borderRadius='50%';
+			ripple.style.transform='scale(0)';
+			ripple.style.opacity='0.25';
+			ripple.style.background='#fff';
+			ripple.style.width=ripple.style.height=Math.max(rect.width,rect.height)+'px';
+			ripple.style.left=(e.clientX-rect.left - rect.width/2)+'px';
+			ripple.style.top=(e.clientY-rect.top - rect.height/2)+'px';
+			ripple.style.transition='transform .45s ease, opacity .6s ease';
+			target.appendChild(ripple);
+			requestAnimationFrame(()=>{ ripple.style.transform='scale(1)'; ripple.style.opacity='0'; });
+			setTimeout(()=> ripple.remove(), 650);
+		}
+		Array.from(document.querySelectorAll('a.btn,button.btn')).forEach(el=>{
+			el.addEventListener('click', addRipple);
+		});
+
+		// Page transition for same-origin links
+		(function(){
+			function sameOrigin(href){
+				try{ const u=new URL(href, location.href); return u.origin===location.origin; }catch(_){ return false; }
+			}
+			document.addEventListener('click', function(ev){
+				const a = ev.target.closest('a');
+				if(!a) return;
+				if(a.target==='_blank' || a.hasAttribute('download')) return;
+				if(!sameOrigin(a.getAttribute('href')||'')) return;
+				ev.preventDefault();
+				document.body.classList.add('page-leave');
+				setTimeout(()=>{ window.location.href = a.href; }, 280);
+			});
+			window.addEventListener('pageshow', ()=>{
+				document.body.classList.remove('page-leave');
+				document.body.classList.add('page-enter');
+				setTimeout(()=> document.body.classList.remove('page-enter'), 400);
+			});
+		})();
+
+		// Theme switcher (persisted in localStorage). Adds class on body: theme-dark
+		(function(){
+			const KEY='theme';
+			const btn=document.getElementById('themeToggle');
+			function apply(theme){
+				if(theme==='dark'){
+					document.body.classList.add('theme-dark');
+				}else{
+					document.body.classList.remove('theme-dark');
+				}
+			}
+			const saved=localStorage.getItem(KEY)||'light';
+			apply(saved);
+			if(btn){
+				btn.addEventListener('click',()=>{
+					const current=document.body.classList.contains('theme-dark')?'dark':'light';
+					const next=current==='dark'?'light':'dark';
+					localStorage.setItem(KEY,next);
+					apply(next);
+				});

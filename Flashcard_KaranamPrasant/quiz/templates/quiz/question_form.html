@@ -1,0 +1,118 @@
+{% extends 'quiz/base.html' %}
+{% block title %}Add Question - Flashcards{% endblock %}
+{% block content %}
+<div class="card">
+	<form method="post" enctype="multipart/form-data">
+		{% csrf_token %}
+		<label>Question Text</label>
+		{{ form.text }}
+
+		<label>Question Type</label>
+		{{ form.type }}
+		<p style="color:#6b7280;font-size:14px">Select "Text Answer" to provide a single correct answer, or "Multiple Choice" to enter options A-D.</p>
+
+		<div class="form-row">
+			<div>
+				<label>Answer (for Text)</label>
+				{{ form.answer_text }}
+			</div>
+			<div>
+				<label>Correct Option (a/b/c/d) for MCQ</label>
+				{{ form.correct_option }}
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div>
+				<label>Option A</label>
+				{{ form.option_a }}
+			</div>
+			<div>
+				<label>Option B</label>
+				{{ form.option_b }}
+			</div>
+			<div>
+				<label>Option C</label>
+				{{ form.option_c }}
+			</div>
+			<div>
+				<label>Option D</label>
+				{{ form.option_d }}
+			</div>
+		</div>
+
+		<br />
+		<div class="form-row">
+			<div>
+				<label>Question Image</label>
+				{{ form.question_image }}
+			</div>
+			<div>
+				<label>Question Audio</label>
+				{{ form.question_audio }}
+			</div>
+		</div>
+		<div class="form-row">
+			<div>
+				<label>Question Video</label>
+				{{ form.question_video }}
+			</div>
+			<div></div>
+		</div>
+
+		<br />
+		<div class="form-row">
+			<div>
+				<label>Answer Image (optional)</label>
+				{{ form.answer_image }}
+			</div>
+			<div>
+				<label>Answer Audio (optional)</label>
+				{{ form.answer_audio }}
+			</div>
+		</div>
+		<div class="form-row">
+			<div>
+				<label>Answer Video (optional)</label>
+				{{ form.answer_video }}
+			</div>
+			<div></div>
+		</div>
+
+		<br />
+		<button class="btn" type="submit">Save</button>
+	</form>
+</div>
+<script>
+// Live previews for uploaded media
+(function(){
+	function bindPreview(inputSelector, previewId, type){
+		const input = document.querySelector(inputSelector);
+		if(!input) return;
+		let preview = document.getElementById(previewId);
+		if(!preview){
+			preview = document.createElement(type === 'img' ? 'img' : type);
+			preview.id = previewId;
+			preview.style.maxWidth = '100%';
+			preview.style.borderRadius = '10px';
+			preview.style.margin = '10px 0';
+			input.parentElement.appendChild(preview);
+		}
+		input.addEventListener('change', ()=>{
+			const file = input.files && input.files[0];
+			if(!file){ preview.remove(); return; }
+			const url = URL.createObjectURL(file);
+			if(type==='img'){ preview.src = url; }
+			if(type==='audio'){ preview.controls = true; preview.src = url; }
+			if(type==='video'){ preview.controls = true; preview.src = url; }
+		});
+	}
+	bindPreview('input[name="question_image"]','preview_q_img','img');
+	bindPreview('input[name="question_audio"]','preview_q_audio','audio');
+	bindPreview('input[name="question_video"]','preview_q_video','video');
+	bindPreview('input[name="answer_image"]','preview_a_img','img');
+	bindPreview('input[name="answer_audio"]','preview_a_audio','audio');
+	bindPreview('input[name="answer_video"]','preview_a_video','video');
+})();
+</script>
+{% endblock %}

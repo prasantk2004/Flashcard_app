@@ -1,0 +1,63 @@
+{% extends 'quiz/base.html' %}
+{% block title %}Practice - Flashcards{% endblock %}
+{% block content %}
+<div class="card">
+	<div style="font-weight:700;margin-bottom:10px">{{ q.text }}</div>
+	<div style="display:flex;gap:12px;color:#6b7280;margin-bottom:6px">
+		<div>Streak: <span id="streak">{{ streak }}</span></div>
+		<div>Best: <span id="best">{{ best_streak }}</span></div>
+	</div>
+	{% if q.question_image %}
+		<img src="{{ q.question_image.url }}" style="max-width:100%;border-radius:10px;margin:8px 0" />
+	{% endif %}
+	{% if q.question_audio %}
+		<audio controls style="width:100%;margin:8px 0">
+			<source src="{{ q.question_audio.url }}">
+		</audio>
+	{% endif %}
+	{% if q.question_video %}
+		<video controls style="width:100%;border-radius:10px;margin:8px 0">
+			<source src="{{ q.question_video.url }}">
+		</video>
+	{% endif %}
+	<form method="post" action="{% url 'check_answer' q.pk %}">
+		{% csrf_token %}
+		{% if q.type == 'mcq' %}
+			<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+				<label><input type="radio" name="answer" value="a"> {{ q.option_a }}</label>
+				<label><input type="radio" name="answer" value="b"> {{ q.option_b }}</label>
+				<label><input type="radio" name="answer" value="c"> {{ q.option_c }}</label>
+				<label><input type="radio" name="answer" value="d"> {{ q.option_d }}</label>
+			</div>
+		{% else %}
+			<input type="text" name="answer" placeholder="Type your answer" />
+		{% endif %}
+		<br />
+		<button class="btn" type="submit">Check</button>
+	</form>
+</div>
+<div class="card" id="encourage" style="text-align:center;font-weight:600"></div>
+<script>
+(function(){
+	const messages=[
+		"You got this! 💪",
+		"Memory grows with practice! 🧠",
+		"Small steps, big gains! 🚀",
+		"Focus and shine! ✨",
+		"One card at a time! 🃏"
+	];
+	let i=0; const box=document.getElementById('encourage');
+	function swap(){
+		box.style.opacity=0;
+		setTimeout(()=>{
+			box.textContent=messages[i%messages.length];
+			i++;
+			box.style.opacity=1;
+		},200);
+	}
+	box.textContent=messages[0];
+	box.style.transition='opacity .25s ease';
+	setInterval(swap, 2800);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'quiz/base.html' %}
+{% block title %}Result - Flashcards{% endblock %}
+{% block content %}
+<div class="card">
+	<div style="font-weight:600;margin-bottom:8px">{{ q.text }}</div>
+	{% if is_correct %}
+		<div id="result-status" style="color:#10b981;font-weight:700">Correct ✅</div>
+	{% else %}
+		<div id="result-status" style="color:#ef4444;font-weight:700">Incorrect ❌</div>
+		<div style="color:#6b7280">Your answer: {{ user_answer }}</div>
+		<div style="color:#6b7280">Correct: {{ correct }}</div>
+	{% endif %}
+
+	{% if q.answer_image %}
+		<img src="{{ q.answer_image.url }}" style="max-width:100%;border-radius:10px;margin:12px 0" />
+	{% endif %}
+	{% if q.answer_audio %}
+		<audio controls style="width:100%;margin:8px 0">
+			<source src="{{ q.answer_audio.url }}">
+		</audio>
+	{% endif %}
+	{% if q.answer_video %}
+		<video controls style="width:100%;border-radius:10px;margin:8px 0">
+			<source src="{{ q.answer_video.url }}">
+		</video>
+	{% endif %}
+	<br />
+	<div style="display:flex;gap:12px;color:#6b7280;margin:4px 0 10px">
+		<div>Streak: <span>{{ streak }}</span></div>
+		<div>Best: <span>{{ best_streak }}</span></div>
+		{% if new_best %}<div style="color:#a78bfa;font-weight:600">New best! 🌟</div>{% endif %}
+	</div>
+	<a class="btn" href="/">Back to Questions</a>
+	<a class="btn secondary" href="{% url 'practice' q.pk %}">Try Again</a>
+</div>
+<script>
+	(function(){
+		const ok = {{ is_correct|yesno:'true,false' }};
+		const el = document.getElementById('result-status');
+		if(ok){
+			setTimeout(()=> window.flashFx && window.flashFx.fireConfetti(90,1000), 120);
+		}else{
+			el && el.classList.add('shake');
+		}
+	})();
+</script>
+{% endblock %}

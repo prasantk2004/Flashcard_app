@@ -1,0 +1,23 @@
+{% extends 'quiz/base.html' %}
+{% block title %}Questions - Flashcards{% endblock %}
+{% block content %}
+<div class="card">
+	<a href="{% url 'question_add' %}" class="btn">+ Add Question</a>
+</div>
+{% for q in questions %}
+	<div class="card">
+		<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+			<div>
+				<div style="font-weight:600">{{ q.text }}</div>
+				<div style="color:#6b7280;font-size:14px">Type: {{ q.get_type_display }}</div>
+				{% if q.question_image %}
+					<img src="{{ q.question_image.url }}" style="max-width:220px;border-radius:8px;margin-top:8px" />
+				{% endif %}
+			</div>
+			<a href="{% url 'practice' q.pk %}" class="btn secondary">Practice</a>
+		</div>
+	</div>
+{% empty %}
+	<div class="card">No questions yet. Click "Add Question" to create one.</div>
+{% endfor %}
+{% endblock %}
